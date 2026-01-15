@@ -1,0 +1,20 @@
+#!/bin/bash
+cd "${0%/*}" || exit   # Run from this directory
+. "${WM_PROJECT_DIR:?}"/wmake/scripts/AllwmakeParseArguments
+#------------------------------------------------------------------------------
+
+cd incompressible
+wclean
+wmakeLnInclude -u ../turbulenceModels
+wmake
+
+cd ..
+
+cd compressible
+wclean
+wmakeLnInclude -u ../turbulenceModels
+wmake
+
+cd ..
+
+#------------------------------------------------------------------------------
