@@ -3,7 +3,6 @@ Implementation of the SALSA extension for the Spalart-Allmaras turbulence model 
 
 ## TODO
 
-- check implementation of $C_{b1}$ requires adjustment of $C_{w1}$
 - validate implementation
 - check why OF throws *Duplicate entry* errors on start-up, but runs normally afterward
 - documentation

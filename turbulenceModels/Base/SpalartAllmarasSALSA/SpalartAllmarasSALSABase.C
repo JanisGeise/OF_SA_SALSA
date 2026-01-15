@@ -175,7 +175,6 @@ void SpalartAllmarasSALSABase<BasicEddyViscosityModel>::correctNut()
     correctNut(fv1(this->chi()));
 }
 
-// ---------------------------------- START NEW METHOD -----------------------------------------------------------------------------------
 template<class BasicEddyViscosityModel>
 tmp<volScalarField::Internal> SpalartAllmarasSALSABase<BasicEddyViscosityModel>::GammaEff
 (
@@ -206,14 +205,13 @@ tmp<volScalarField::Internal> SpalartAllmarasSALSABase<BasicEddyViscosityModel>:
     const volScalarField::Internal gamma(max(alpha1, alpha2));
 
     return
-        min
-        (
-            1.25,
-            max(gamma, 0.75)
+        sqrt(
+            min(
+                1.25,
+                max(gamma, 0.75)
+            )
         );
 }
-
-// ---------------------------------------------- ENDE TEST --------------------------------------------------------------------------------------------------------
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -278,7 +276,7 @@ SpalartAllmarasSALSABase<BasicEddyViscosityModel>::SpalartAllmarasSALSABase
             0.0
         )
     ),
-    Cw1_(Cb1_/sqr(kappa_) + (1.0 + Cb2_)/sigmaNut_),        // TODO: update since Cb1 now != const. or leave as it is?
+    Cw1_(Cb1_/sqr(kappa_) + (1.0 + Cb2_)/sigmaNut_),        // TODO: leave that in here even though not used anymore?
     Cw2_
     (
         dimensioned<scalar>::getOrAddToDict
@@ -390,7 +388,7 @@ bool SpalartAllmarasSALSABase<BasicEddyViscosityModel>::read()
 
         Cb1_.readIfPresent(this->coeffDict());
         Cb2_.readIfPresent(this->coeffDict());
-        Cw1_ = Cb1_/sqr(kappa_) + (1.0 + Cb2_)/sigmaNut_;       // TODO: why here defined again?
+        Cw1_ = Cb1_/sqr(kappa_) + (1.0 + Cb2_)/sigmaNut_;       // TODO: leave that in here even though not used anymore?
         Cw2_.readIfPresent(this->coeffDict());
         Cw3_.readIfPresent(this->coeffDict());
         Cv1_.readIfPresent(this->coeffDict());
@@ -502,7 +500,11 @@ void SpalartAllmarasSALSABase<BasicEddyViscosityModel>::correct()
         volScalarField Stilda(this->Stilda(chi, fv1, tgradU(), dTilda));
         tgradU.clear();
 
-        // TODO: update Cw1 as well?
+        // compute Cb1*sqrt(gamma) for SALSA modification and update Cw1 accordingly
+        const volScalarField::Internal Cb1Eff = Cb1_ * GammaEff(Stilda, dTilda)();
+        const volScalarField::Internal Cw1Eff = Cb1Eff/sqr(kappa_) + (scalar(1) + Cb2_)/sigmaNut_;
+
+
         tmp<fvScalarMatrix> nuTildaEqn
         (
             fvm::ddt(alpha, rho, nuTilda_)
@@ -510,10 +512,10 @@ void SpalartAllmarasSALSABase<BasicEddyViscosityModel>::correct()
           - fvm::laplacian(alpha*rho*DnuTildaEff(), nuTilda_)
           - Cb2_/sigmaNut_*alpha()*rho()*magSqr(fvc::grad(nuTilda_)()())
          ==
-            Cb1_*sqrt(GammaEff(Stilda, dTilda))*alpha()*rho()*Stilda()*nuTilda_()*(scalar(1) - ft2())      // TODO: Gamma added
+            Cb1Eff*alpha()*rho()*Stilda()*nuTilda_()*(scalar(1) - ft2())
           - fvm::Sp
             (
-                (Cw1_*fw(Stilda, dTilda) - Cb1_*sqrt(GammaEff(Stilda, dTilda))/sqr(kappa_)*ft2())      // TODO: Gamma added
+                (Cw1Eff*fw(Stilda, dTilda) - Cb1Eff/sqr(kappa_)*ft2())
                *alpha()*rho()*nuTilda_()/sqr(dTilda()),
                 nuTilda_
             )

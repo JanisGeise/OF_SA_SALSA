@@ -173,7 +173,7 @@ protected:
         void correctNut(const volScalarField& fv1);
         virtual void correctNut();
 
-        // TEST
+        // sqrt(gamma) used in SALSA extension
         tmp<volScalarField::Internal> GammaEff
         (
             const volScalarField& Stilda,
