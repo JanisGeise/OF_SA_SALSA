@@ -124,16 +124,51 @@ tmp<volScalarField> SpalartAllmarasSALSABase<BasicEddyViscosityModel>::r
 
 
 template<class BasicEddyViscosityModel>
+tmp<volScalarField> SpalartAllmarasSALSABase<BasicEddyViscosityModel>::rMod
+(
+    const volScalarField& nur,
+    const volScalarField& Stilda,
+    const volScalarField& dTilda
+) const
+{
+    const dimensionedScalar eps(Stilda.dimensions(), SMALL);
+    // const dimensionedScalar epsRho(this->rho_.dimensions(), SMALL);
+
+    // compute
+    // TODO: issue for rho = 0? shouldn't happen but who knows...
+    tmp<volScalarField> Psi = sqrt(rhoInf_/this->rho_) * nuTilda_ / (sqr(kappa_) * sqr(dTilda));
+    // doesn't compile: tmp<volScalarField> Psi = sqrt(rhoInf_/max(this->rho_, epsRho)) * nuTilda_ / (sqr(kappa_) * sqr(dTilda));
+    // works: tmp<volScalarField> Psi = nuTilda_ / (sqr(kappa_) * sqr(dTilda));
+
+    // compute modified r, keep the limiter
+    tmp<volScalarField> tr = min(1.6 * tanh(0.7 * Psi / max(Stilda, eps)), scalar(10));
+
+    tr.ref().boundaryFieldRef() == 0;
+
+    return tr;
+}
+
+
+template<class BasicEddyViscosityModel>
 tmp<volScalarField::Internal> SpalartAllmarasSALSABase<BasicEddyViscosityModel>::fw
 (
     const volScalarField& Stilda,
     const volScalarField& dTilda
 ) const
 {
-    const volScalarField::Internal r(this->r(nuTilda_, Stilda, dTilda)()());
-    const volScalarField::Internal g(r + Cw2_*(pow6(r) - r));
-
-    return g*pow((1 + pow6(Cw3_))/(pow6(g) + pow6(Cw3_)), 1.0/6.0);
+    // TODO: check how to make this more efficient
+    if (rMod_)
+    {
+        const volScalarField::Internal r(this->rMod(nuTilda_, Stilda, dTilda)()());
+        const volScalarField::Internal g(r + Cw2_*(pow6(r) - r));
+        return g*pow((1 + pow6(Cw3_))/(pow6(g) + pow6(Cw3_)), 1.0/6.0);
+    }
+    else
+    {
+        const volScalarField::Internal r(this->r(nuTilda_, Stilda, dTilda)()());
+        const volScalarField::Internal g(r + Cw2_*(pow6(r) - r));
+        return g*pow((1 + pow6(Cw3_))/(pow6(g) + pow6(Cw3_)), 1.0/6.0);
+    }
 }
 
 
@@ -350,6 +385,31 @@ SpalartAllmarasSALSABase<BasicEddyViscosityModel>::SpalartAllmarasSALSABase
         )
     ),
 
+    rhoInf_
+    (
+        dimensionedScalar
+        (
+            "rhoInf",
+            dimDensity,
+            dimensioned<scalar>::getOrAddToDict
+            (
+                "rhoInf",
+                this->coeffDict_,
+                1.0
+            ).value()
+        )
+    ),
+
+    rMod_
+    (
+        Switch::getOrAddToDict
+        (
+            "useRmod",
+            this->coeffDict_,
+            false
+        )
+    ),
+
     nuTilda_
     (
         IOobject
@@ -365,6 +425,15 @@ SpalartAllmarasSALSABase<BasicEddyViscosityModel>::SpalartAllmarasSALSABase
 
     y_(wallDist::New(this->mesh_).y())
 {
+    if (rMod_)
+    {
+        Info<< "modified r term: active" << nl;
+    }
+    else
+    {
+        Info<< "modified r term: inactive" << nl;
+    }
+
     if (ft2_)
     {
         Info<< "ft2 term: active" << nl;
@@ -398,6 +467,16 @@ bool SpalartAllmarasSALSABase<BasicEddyViscosityModel>::read()
         ft2_.readIfPresent("ft2", this->coeffDict());
         Ct3_.readIfPresent(this->coeffDict());
         Ct4_.readIfPresent(this->coeffDict());
+        rhoInf_.readIfPresent(this->coeffDict());
+
+        if (rMod_)
+        {
+            Info<< "    modified r term: active" << nl;
+        }
+        else
+        {
+            Info<< "    modified r term: inactive" << nl;
+        }
 
         if (ft2_)
         {
@@ -503,7 +582,6 @@ void SpalartAllmarasSALSABase<BasicEddyViscosityModel>::correct()
         // compute Cb1*sqrt(gamma) for SALSA modification and update Cw1 accordingly
         const volScalarField::Internal Cb1Eff = Cb1_ * GammaEff(Stilda, dTilda)();
         const volScalarField::Internal Cw1Eff = Cb1Eff/sqr(kappa_) + (scalar(1) + Cb2_)/sigmaNut_;
-
 
         tmp<fvScalarMatrix> nuTildaEqn
         (

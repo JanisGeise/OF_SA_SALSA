@@ -113,6 +113,9 @@ protected:
             dimensionedScalar Ct3_;
             dimensionedScalar Ct4_;
 
+            dimensionedScalar rhoInf_;
+            Switch rMod_;
+
 
         // Fields
 
@@ -142,6 +145,13 @@ protected:
         tmp<volScalarField> Omega(const volTensorField& gradU) const;
 
         tmp<volScalarField> r
+        (
+            const volScalarField& nur,
+            const volScalarField& Stilda,
+            const volScalarField& dTilda
+        ) const;
+
+        tmp<volScalarField> rMod
         (
             const volScalarField& nur,
             const volScalarField& Stilda,
