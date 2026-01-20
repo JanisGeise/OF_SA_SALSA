@@ -221,7 +221,7 @@ tmp<volScalarField::Internal> SpalartAllmarasSALSABase<BasicEddyViscosityModel>:
 
     const volScalarField::Internal alpha1
     (
-        pow(1.01*r, 0.65)
+        pow(scalar(1.01)*r, scalar(0.65))
     );
 
     const volScalarField::Internal alpha2
@@ -230,8 +230,8 @@ tmp<volScalarField::Internal> SpalartAllmarasSALSABase<BasicEddyViscosityModel>:
         (
             max
             (
-                0.0,
-                1.0 - tanh(this->chi()/68.0)
+                scalar(0),
+                scalar(1) - tanh(this->chi()/scalar(68))
             ),
             scalar(0.65)
         )
@@ -242,8 +242,8 @@ tmp<volScalarField::Internal> SpalartAllmarasSALSABase<BasicEddyViscosityModel>:
     return
         sqrt(
             min(
-                1.25,
-                max(gamma, 0.75)
+                scalar(1.25),
+                max(gamma, scalar(0.75))
             )
         );
 }
