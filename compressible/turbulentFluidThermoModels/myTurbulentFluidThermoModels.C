@@ -26,10 +26,11 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "myTurbulentFluidThermoModels.H"
+#include "turbulentFluidThermoModels.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+/*
 defineTurbulenceModelTypes
 (
     geometricOneField,
@@ -49,6 +50,7 @@ makeBaseTurbulenceModel
     ThermalDiffusivity,
     fluidThermo
 );
+*/
 
 // -------------------------------------------------------------------------- //
 // RAS models

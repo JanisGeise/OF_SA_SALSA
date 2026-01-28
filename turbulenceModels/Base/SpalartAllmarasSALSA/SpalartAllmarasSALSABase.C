@@ -138,7 +138,6 @@ tmp<volScalarField> SpalartAllmarasSALSABase<BasicEddyViscosityModel>::rMod
     // TODO: issue for rho = 0? shouldn't happen but who knows...
     tmp<volScalarField> Psi = sqrt(rhoInf_/this->rho_) * nuTilda_ / (sqr(kappa_) * sqr(dTilda));
     // doesn't compile: tmp<volScalarField> Psi = sqrt(rhoInf_/max(this->rho_, epsRho)) * nuTilda_ / (sqr(kappa_) * sqr(dTilda));
-    // works: tmp<volScalarField> Psi = nuTilda_ / (sqr(kappa_) * sqr(dTilda));
 
     // compute modified r, keep the limiter
     tmp<volScalarField> tr = min(1.6 * tanh(0.7 * Psi / max(Stilda, eps)), scalar(10));

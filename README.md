@@ -4,8 +4,8 @@ Implementation of the SALSA extension for the Spalart-Allmaras turbulence model 
 ## TODO
 
 - validate implementation
-- check why OF throws *Duplicate entry* errors on start-up, but runs normally afterward
 - documentation
+- different definition of Stilde here -> issue?
 
 ## References
 - template / directory structure taken from https://github.com/TUFRG/SAH-RANS-OF

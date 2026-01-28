@@ -26,10 +26,11 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "myTurbulentTransportModels.H"
+#include "turbulentTransportModels.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+/*
 defineTurbulenceModelTypes
 (
     geometricOneField,
@@ -47,6 +48,7 @@ makeBaseTurbulenceModel
     IncompressibleTurbulenceModel,
     transportModel
 );
+*/
 
 // -------------------------------------------------------------------------- //
 // RAS models
