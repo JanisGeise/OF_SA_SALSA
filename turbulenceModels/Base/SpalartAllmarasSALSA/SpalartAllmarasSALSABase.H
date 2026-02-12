@@ -115,6 +115,7 @@ protected:
 
             dimensionedScalar rhoInf_;
             Switch rMod_;
+            Switch sMod_;
 
 
         // Fields
@@ -144,6 +145,8 @@ protected:
 
         tmp<volScalarField> Omega(const volTensorField& gradU) const;
 
+        tmp<volScalarField> Sstar(const volTensorField& gradU) const;
+
         tmp<volScalarField> r
         (
             const volScalarField& nur,
@@ -153,6 +156,7 @@ protected:
 
         tmp<volScalarField> rMod
         (
+            const volScalarField& fv1,
             const volScalarField& nur,
             const volScalarField& Stilda,
             const volScalarField& dTilda
@@ -161,6 +165,13 @@ protected:
         tmp<volScalarField::Internal> fw
         (
             const volScalarField& Stilda,
+            const volScalarField& dTilda
+        ) const;
+
+        tmp<volScalarField::Internal> fwMod
+        (
+            const volScalarField& fv1,
+            const volScalarField& Sstar,
             const volScalarField& dTilda
         ) const;
 
@@ -186,6 +197,7 @@ protected:
         // sqrt(gamma) used in SALSA extension
         tmp<volScalarField::Internal> GammaEff
         (
+            const volScalarField& nur,
             const volScalarField& Stilda,
             const volScalarField& dTilda
         ) const;

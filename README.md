@@ -1,5 +1,5 @@
 # SA-SALSA extension for OpenFOAM
-Implementation of the SALSA extension for the Spalart-Allmaras turbulence model in OpenFOAM.
+Implementation of the strain-adaptive linear Spalart-Allmaras (SALSA) turbulence model in OpenFOAM.
 
 The repositories of [TUFRG](https://github.com/TUFRG/SAH-RANS-OF) and 
 [mAlletto](https://gitlab.com/mAlletto/openfoamtutorials/-/tree/master/SpalartAllmarasRCsend)
@@ -8,9 +8,10 @@ were used as template for the structure of this implementation.
 
 ## TODO
 
-- validate implementation
+- validate implementation -> difference $\tilde{C}_{b1}$ and $C_{b1}$ not mentioned in paper
+(definition of $\tilde{C}_{b1}$ missing), also in SA $(\tilde{\nu} + \nu) / \sigma$ but in SALSA $\nu + \tilde{\nu} / \sigma$
 - documentation of all equations etc.
-- different definition of Stilde here -> here standard SA definition, in SALSA paper different -> implement version in SALSA paper
+- check if we can implement this more efficiently
 
 ## References
 - template / directory structure taken from [TUFRG](https://github.com/TUFRG/SAH-RANS-OF) and 
