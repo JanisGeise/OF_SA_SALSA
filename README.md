@@ -1,16 +1,54 @@
-# SA-SALSA extension for OpenFOAM
+# SALSA turbulence model for OpenFOAM
 Implementation of the strain-adaptive linear Spalart-Allmaras (SALSA) turbulence model in OpenFOAM.
 
 The repositories of [TUFRG](https://github.com/TUFRG/SAH-RANS-OF) and 
 [mAlletto](https://gitlab.com/mAlletto/openfoamtutorials/-/tree/master/SpalartAllmarasRCsend)
 were used as template for the structure of this implementation.
 
+## Installation
 
-## TODO
+To compile the SALSA turbulence model, execute `$./Allwmake`.
 
-- validate implementation -> difference $\tilde{C}_{b1}$ and $C_{b1}$ not mentioned in paper
-(definition of $\tilde{C}_{b1}$ missing), also in SA $(\tilde{\nu} + \nu) / \sigma$ but in SALSA $\nu + \tilde{\nu} / \sigma$
-- documentation of all equations etc.
+Once compiled, you should see `libSASALSAIncompressibleTurbulenceModel.so` `libSASALSACompressibleTurbulenceModel.so`
+in `$FOAM_USER_LIBBIN`.
+
+To remove the SALSA model, just execute the `$./Allwclean`.
+
+## Setting up a case
+To run a simulation with the SALSA model, first add the path to the library to the `controlDict`:
+
+`libs			("libSASALSACompressibleTurbulenceModel.so");`
+
+Then choose the correct turbulence model in the `turbulenceProperties`:
+
+```
+RAS
+{
+    RASModel            SpalartAllmarasSALSA;
+    turbulence          on;
+    printCoeffs         on;
+}
+```
+
+There are three optional parameters `rhoInf, useRmod, useSmod`:
+```
+RAS
+{
+    RASModel            SpalartAllmarasSALSA;
+    turbulence          on;
+    printCoeffs         on;
+
+    rhoInf              0.957837;   // required for useRmod = true
+    useRmod             true;       // Edward's modification
+    useSmod             true;      // strain rate instead of vorticity for Stilda
+}
+```
+The parameter `rhoInf` denotes the free-stream densitiy $\rho_\infty$ and is only required for `useRmod   true`.
+The parameter `useRmod` activates the Edward's modification, the parameter `useSmod` sets `STilda`to be the strain rate 
+instead of the vorticity. Setting both paramerters to `true` results in the original SALSA turbulence model, linked in the references below.
+
+You can find an example setup using the SALSA model [here](https://github.com/AndreWeiner/buffet_oat15).
+## still TODO
 - check if we can implement this more efficiently
 
 ## References

@@ -636,7 +636,7 @@ void SpalartAllmarasSALSABase<BasicEddyViscosityModel>::correct()
         tmp<volScalarField::Internal> tFw;
         if (rMod_)
         {
-            // we overwrote Sstar with Stilda if sMod_
+            // we overwrote Sstar with Stilda if sMod_ so sTilda is here Sstar or Stilda depending on the setting
             tFw = fwMod(fv1, Stilda, dTilda);
         }
         else
