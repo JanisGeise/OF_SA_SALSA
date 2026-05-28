@@ -57,4 +57,12 @@ makeBaseTurbulenceModel
 #include "SpalartAllmarasSALSA.H"
 makeRASModel(SpalartAllmarasSALSA);
 
+
+// -------------------------------------------------------------------------- //
+// LES models
+// -------------------------------------------------------------------------- //
+
+#include "SpalartAllmarasSALSADDES.H"
+makeLESModel(SpalartAllmarasSALSADDES);
+
 // ************************************************************************* //
