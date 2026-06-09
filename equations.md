@@ -726,3 +726,140 @@ $$
 $$
 
 No sigma-production override is applied.
+
+## Spalart-Allmaras QCR2020
+
+The local QCR2020 variants,
+`SpalartAllmarasQCR2020` and `SpalartAllmarasDDESQCR2020`, use the standard
+OpenFOAM Spalart-Allmaras RANS and DDES transport equations and replace the
+turbulent-stress relation by the QCR2020 nonlinear constitutive relation from
+the NASA/TMR Spalart-Allmaras page:
+
+$$
+\tau_{ij,QCR2020}
+=
+\tau_{ij}
+- C_{cr1}''(O_{ik}\tau_{jk}+O_{jk}\tau_{ik})
+- C_{cr2}''\mu_t\sqrt{2W_{mn}W_{mn}}\delta_{ij}.
+$$
+
+The coefficients are
+
+$$
+C_{cr1}''=C_{cr1}'(1+C_{fw1}f_w),
+\qquad
+C_{cr2}''=C_{cr2}'(1+C_{fw2}f_w),
+$$
+
+with
+
+$$
+C_{cr1}'=0.20,\qquad
+C_{cr2}'=\frac{1}{3a_1}=2.150537634408602,\qquad
+a_1=0.155,\qquad
+C_{fw1}=2.0,\qquad
+C_{fw2}=0.3.
+$$
+
+The normalized rotation tensor is
+
+$$
+O_{ik}
+=
+\frac{2W_{ik}}
+{\sqrt{
+    \frac{\partial u_m}{\partial x_n}
+    \frac{\partial u_m}{\partial x_n}
+}},
+\qquad
+W_{ik}
+=
+\frac{1}{2}
+\left(
+    \frac{\partial u_i}{\partial x_k}
+    -
+    \frac{\partial u_k}{\partial x_i}
+\right),
+$$
+
+with a small-gradient guard so QCR has no effect in zero-gradient regions.
+
+For the QCR2020 coefficient functions, the standard SA wall function is used
+with the smoother recommended replacement
+
+$$
+\Omega_s
+=
+\left[
+    \frac{1}{2}
+    \left(
+        2W_{ij}W_{ij}+2S_{ij}S_{ij}
+    \right)
+\right]^{1/2}.
+$$
+
+Then
+
+$$
+\bar{S}
+=
+\frac{\tilde{\nu}}{\kappa^2d^2}f_{v2},
+$$
+
+and
+
+$$
+\hat{S}
+=
+\Omega_s+\bar{S}
+\quad\mathrm{for}\quad
+\bar{S}\ge -C_2\Omega_s,
+$$
+
+$$
+\hat{S}
+=
+\Omega_s
++
+\frac{
+    \Omega_s(C_2^2\Omega_s+C_3\bar{S})
+}{
+    (C_3-2C_2)\Omega_s-\bar{S}
+}
+\quad\mathrm{for}\quad
+\bar{S}< -C_2\Omega_s,
+$$
+
+where
+
+$$
+C_2=0.7,\qquad C_3=0.9.
+$$
+
+The resulting $r$, $g$, and $f_w$ are
+
+$$
+r=\min\left[
+    \frac{\tilde{\nu}}{\hat{S}\kappa^2d^2},
+    10
+\right],
+\qquad
+g=r+c_{w2}(r^6-r),
+$$
+
+$$
+f_w
+=
+g
+\left[
+    \frac{1+c_{w3}^6}{g^6+c_{w3}^6}
+\right]^{1/6}.
+$$
+
+QCR2020 is independent of the local SALSA equations in this repository. The
+implemented DDES variant combines QCR2020 with standard SA-DDES length-scale and
+shielding controls because those do not replace the QCR2020 constitutive-stress
+relation. QCR2020 is not compatible with another QCR variant in the same model.
+If a future base model includes a true modeled $k$ contribution in the
+Boussinesq relation, the final isotropic QCR2020 approximation should be omitted
+to avoid double counting.

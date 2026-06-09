@@ -4,6 +4,8 @@ The repository provides:
 
 - `SpalartAllmarasSALSA`: the RANS model.
 - `SpalartAllmarasSALSADDES`: a conservative DDES model using SALSA as the RANS baseline.
+- `SpalartAllmarasQCR2020`: the standard SA RANS model with the QCR2020 nonlinear stress relation.
+- `SpalartAllmarasDDESQCR2020`: the standard SA-DDES model with the QCR2020 nonlinear stress relation.
 
 The repositories of [TUFRG](https://github.com/TUFRG/SAH-RANS-OF) and 
 [mAlletto](https://gitlab.com/mAlletto/openfoamtutorials/-/tree/master/SpalartAllmarasRCsend)
@@ -74,6 +76,34 @@ The parameter `useRmod` activates Edwards' modification, and `useSmod` sets `Sti
 instead of the vorticity. Setting both parameters to `true` results in the original SALSA turbulence model,
 linked in the references below.
 
+To use the standard Spalart-Allmaras QCR2020 model, select
+`SpalartAllmarasQCR2020`. This model is independent of SALSA and uses the
+standard OpenFOAM SA transport equation with the QCR2020 nonlinear constitutive
+stress relation.
+
+```foam
+RAS
+{
+    RASModel            SpalartAllmarasQCR2020;
+    turbulence          on;
+    printCoeffs         on;
+
+    SpalartAllmarasQCR2020Coeffs
+    {
+        // QCR2020 defaults from Rumsey et al. (2020)
+        Ccr1             0.20;
+        Ccr2             2.150537634408602;
+        Cfw1             2.0;
+        Cfw2             0.3;
+        Cqcr2            0.7;
+        Cqcr3            0.9;
+
+        // OpenFOAM's SA default is SA-noft2; set true for standard SA.
+        ft2              false;
+    }
+}
+```
+
 ### DDES model
 
 The `SpalartAllmarasSALSADDES` model is selected as an LES model:
@@ -131,6 +161,24 @@ production measure and can conflict conceptually with SALSA's own `useSmod` stra
 `SpalartAllmarasSALSADDES` version is therefore conservative: SALSA source/destruction terms plus DDES `dTilda`
 and standard or `ZDES2020` shielding.
 
+For the standard SA-DDES form with the QCR2020 stress relation, select
+`SpalartAllmarasDDESQCR2020`. The same standard DDES and QCR2020 coefficients
+can be supplied in `SpalartAllmarasDDESQCR2020Coeffs`.
+
+### QCR2020 compatibility
+
+The QCR2020 equations were taken from the NASA/TMR Spalart-Allmaras model page:
+the stress relation, the wall-function-dependent `Ccr1''` and `Ccr2''`
+coefficients, the normalized rotation tensor, and the smoother QCR2020
+`Omega_s`-based `f_w` path are all directly extractable there. No conflicting
+QCR2020 equations were found on that page.
+
+QCR2020 is implemented here only for the standard SA RANS and SA-DDES families,
+not as a SALSA option. It should not be combined with another QCR variant. If a
+future base model includes a true modeled turbulent kinetic energy term in the
+Boussinesq relation, the QCR2020 isotropic approximation should be omitted to
+avoid double counting.
+
 The source-code consistent equations for the standard SA, SALSA, and DDES variants are collected in
 [equations.md](equations.md).
 
@@ -146,3 +194,7 @@ in Strain-Adaptive Formulation*, AIAA Journal, Vol. 41, no. 7, May 2012, [https:
 - D.-M. Zimmermann, R. Mayer, T. Lutz, and E. Krämer, *Impact of model parameters of SALSA turbulence model
 on transonic buffet prediction,* AIAA Journal, Vol. 56, no. 2, pp. 874–877, December 2017,
 [https://arc.aiaa.org/doi/10.2514/1.J056193](https://arc.aiaa.org/doi/10.2514/1.J056193)
+- C. L. Rumsey, J.-R. Carlson, T. H. Pulliam, and P. R. Spalart,
+*Improvements to the Quadratic Constitutive Relation Based on NASA Juncture Flow Data,*
+AIAA Journal, Vol. 58, no. 10, pp. 4374-4384, 2020,
+[https://doi.org/10.2514/1.J059683](https://doi.org/10.2514/1.J059683)

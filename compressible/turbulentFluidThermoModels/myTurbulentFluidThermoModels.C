@@ -59,6 +59,9 @@ makeBaseTurbulenceModel
 #include "SpalartAllmarasSALSA.H"
 makeRASModel(SpalartAllmarasSALSA);
 
+#include "SpalartAllmarasQCR2020.H"
+makeRASModel(SpalartAllmarasQCR2020);
+
 
 // -------------------------------------------------------------------------- //
 // LES models
@@ -66,5 +69,8 @@ makeRASModel(SpalartAllmarasSALSA);
 
 #include "SpalartAllmarasSALSADDES.H"
 makeLESModel(SpalartAllmarasSALSADDES);
+
+#include "SpalartAllmarasDDESQCR2020.H"
+makeLESModel(SpalartAllmarasDDESQCR2020);
 
 // ************************************************************************* //
