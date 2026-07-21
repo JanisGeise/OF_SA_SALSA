@@ -727,13 +727,66 @@ $$
 
 No sigma-production override is applied.
 
+## Spalart-Allmaras mixing-layer compressibility correction
+
+The compressible-only `SpalartAllmarasComp` model retains the standard
+OpenFOAM SA equation above and adds the mixing-layer compressibility correction
+of Spalart (2000) to its right-hand side:
+
+$$
+S_{comp}
+=
+-C_5\frac{\tilde{\nu}^2}{a^2}
+\frac{\partial u_i}{\partial x_j}
+\frac{\partial u_i}{\partial x_j},
+\qquad C_5=3.5,
+$$
+
+where $a$ is the local speed of sound. Under the perfect-gas assumption used
+for this correction,
+
+$$
+a^2=\gamma\frac{p}{\rho}.
+$$
+
+Thus, in the conservative OpenFOAM equation implemented here, the additional
+term is
+
+$$
+-\alpha\rho C_5
+\frac{\tilde{\nu}^2}{a^2}|\nabla\mathbf{U}|^2.
+$$
+
+It is linearized as an implicit sink,
+
+$$
+-\operatorname{Sp}\!\left(
+\alpha\rho C_5
+\frac{\tilde{\nu}}{a^2}|\nabla\mathbf{U}|^2,
+\tilde{\nu}
+\right),
+$$
+
+which has the same continuous equation as the stated SA-comp term. The
+coefficient is runtime-selectable as `C5` and defaults to 3.5. Setting `C5` to
+zero recovers the underlying standard SA transport equation.
+
+`SpalartAllmarasCompQCR2020` uses this complete SA-comp model as the transported
+variable baseline and wraps it with the QCR2020 constitutive relation described
+next. The two corrections do not replace or duplicate the same term: SA-comp
+changes the $\tilde{\nu}$ equation, whereas QCR2020 changes the modeled stress.
+
+Reference: P. R. Spalart, *Trends in Turbulence Treatments,* AIAA 2000-2306,
+June 2000, [https://doi.org/10.2514/6.2000-2306](https://doi.org/10.2514/6.2000-2306).
+
 ## Spalart-Allmaras QCR2020
 
-The local QCR2020 variants,
-`SpalartAllmarasQCR2020` and `SpalartAllmarasDDESQCR2020`, use the standard
-OpenFOAM Spalart-Allmaras RANS and DDES transport equations and replace the
-turbulent-stress relation by the QCR2020 nonlinear constitutive relation from
-the NASA/TMR Spalart-Allmaras page:
+The local QCR2020 variants use the QCR2020 nonlinear constitutive relation from
+the NASA/TMR Spalart-Allmaras page. `SpalartAllmarasQCR2020` and
+`SpalartAllmarasDDESQCR2020` use the standard OpenFOAM Spalart-Allmaras RANS and
+DDES transport equations, respectively; `SpalartAllmarasCompQCR2020` uses the
+SA-comp transport equation given above. In each case the selected transport
+model's turbulent-stress relation is replaced by:
 
 $$
 \tau_{ij,QCR2020}
@@ -859,7 +912,9 @@ $$
 QCR2020 is independent of the local SALSA equations in this repository. The
 implemented DDES variant combines QCR2020 with standard SA-DDES length-scale and
 shielding controls because those do not replace the QCR2020 constitutive-stress
-relation. QCR2020 is not compatible with another QCR variant in the same model.
+relation. The SA-comp variant likewise combines cleanly with QCR2020 because its
+additional sink acts only in the SA transport equation. QCR2020 is not
+compatible with another QCR variant in the same model.
 If a future base model includes a true modeled $k$ contribution in the
 Boussinesq relation, the final isotropic QCR2020 approximation should be omitted
 to avoid double counting.
