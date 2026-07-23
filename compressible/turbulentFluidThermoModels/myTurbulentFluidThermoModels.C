@@ -62,6 +62,12 @@ makeRASModel(SpalartAllmarasSALSA);
 #include "SpalartAllmarasQCR2020.H"
 makeRASModel(SpalartAllmarasQCR2020);
 
+#include "SpalartAllmarasComp.H"
+makeRASModel(SpalartAllmarasComp);
+
+#include "SpalartAllmarasCompQCR2020.H"
+makeRASModel(SpalartAllmarasCompQCR2020);
+
 
 // -------------------------------------------------------------------------- //
 // LES models

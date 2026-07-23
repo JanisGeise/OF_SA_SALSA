@@ -5,6 +5,8 @@ The repository provides:
 - `SpalartAllmarasSALSA`: the RANS model.
 - `SpalartAllmarasSALSADDES`: a conservative DDES model using SALSA as the RANS baseline.
 - `SpalartAllmarasQCR2020`: the standard SA RANS model with the QCR2020 nonlinear stress relation.
+- `SpalartAllmarasComp`: standard SA with the mixing-layer compressibility correction.
+- `SpalartAllmarasCompQCR2020`: SA-comp with the QCR2020 nonlinear stress relation.
 - `SpalartAllmarasDDESQCR2020`: the standard SA-DDES model with the QCR2020 nonlinear stress relation.
 
 The repositories of [TUFRG](https://github.com/TUFRG/SAH-RANS-OF) and 
@@ -104,6 +106,55 @@ RAS
 }
 ```
 
+For compressible mixing layers, `SpalartAllmarasComp` adds the SA-comp
+destruction term of Spalart (2000) to the standard SA transport equation. It is
+available only from the compressible library. The default coefficient is
+`C5 3.5`:
+
+```foam
+RAS
+{
+    RASModel            SpalartAllmarasComp;
+    turbulence          on;
+    printCoeffs         on;
+
+    SpalartAllmarasCompCoeffs
+    {
+        C5               3.5;
+        ft2              false;
+    }
+}
+```
+
+To combine that transport correction with the QCR2020 stress relation, select
+`SpalartAllmarasCompQCR2020`. Its coefficient dictionary accepts both `C5` and
+the QCR2020 coefficients:
+
+```foam
+RAS
+{
+    RASModel            SpalartAllmarasCompQCR2020;
+    turbulence          on;
+    printCoeffs         on;
+
+    SpalartAllmarasCompQCR2020Coeffs
+    {
+        C5               3.5;
+        Ccr1             0.20;
+        Ccr2             2.150537634408602;
+        Cfw1             2.0;
+        Cfw2             0.3;
+        Cqcr2            0.7;
+        Cqcr3            0.9;
+        ft2              false;
+    }
+}
+```
+
+The implementation evaluates the local perfect-gas speed of sound as
+$a^2=\gamma p/\rho$, consistently with the assumptions stated by NASA/TMR for
+compressible SA. Setting `C5 0` removes the additional SA-comp term.
+
 ### DDES model
 
 The `SpalartAllmarasSALSADDES` model is selected as an LES model:
@@ -173,8 +224,11 @@ coefficients, the normalized rotation tensor, and the smoother QCR2020
 `Omega_s`-based `f_w` path are all directly extractable there. No conflicting
 QCR2020 equations were found on that page.
 
-QCR2020 is implemented here only for the standard SA RANS and SA-DDES families,
-not as a SALSA option. It should not be combined with another QCR variant. If a
+QCR2020 is implemented here for standard SA RANS, SA-comp RANS, and standard
+SA-DDES, but not as a SALSA option. SA-comp and QCR2020 are compatible: the
+former modifies the transported-variable equation and the latter modifies the
+constitutive stress relation. QCR2020 should not be combined with another QCR
+variant. If a
 future base model includes a true modeled turbulent kinetic energy term in the
 Boussinesq relation, the QCR2020 isotropic approximation should be omitted to
 avoid double counting.
@@ -198,3 +252,5 @@ on transonic buffet prediction,* AIAA Journal, Vol. 56, no. 2, pp. 874–877, De
 *Improvements to the Quadratic Constitutive Relation Based on NASA Juncture Flow Data,*
 AIAA Journal, Vol. 58, no. 10, pp. 4374-4384, 2020,
 [https://doi.org/10.2514/1.J059683](https://doi.org/10.2514/1.J059683)
+- P. R. Spalart, *Trends in Turbulence Treatments,* AIAA 2000-2306, June 2000,
+[https://doi.org/10.2514/6.2000-2306](https://doi.org/10.2514/6.2000-2306)
