@@ -448,7 +448,23 @@ SpalartAllmarasSALSABase<BasicEddyViscosityModel>::SpalartAllmarasSALSABase
         this->mesh_
     ),
 
-    y_(wallDist::New(this->mesh_).y())
+    y_(wallDist::New(this->mesh_).y()),
+
+    // write out sqrt(gamma) for debugging purposes
+    gamma_
+    (
+        IOobject
+        (
+            "sqrtGamma",
+            this->runTime_.timeName(),
+            this->mesh_,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        this->mesh_,
+        dimensionedScalar("sqrtGamma", dimless, 1.0)
+    )
+
 {
     if (rMod_)
     {
@@ -619,13 +635,20 @@ void SpalartAllmarasSALSABase<BasicEddyViscosityModel>::correct()
         if (sMod_)
         {
             tS = this->Sstar(tgradU());
-            tCb1Eff = Cb1_ * GammaEff(nuTilda_, tS(), dTilda)();
         }
         else
         {
             tS = this->Stilda(chi, fv1, tgradU(), dTilda);
-            tCb1Eff = Cb1_ * GammaEff(nuTilda_, tS(), dTilda)();
         }
+
+        tmp<volScalarField::Internal> tGamma = GammaEff(nuTilda_, tS(), dTilda);
+
+        // store for writing
+        gamma_.primitiveFieldRef() = tGamma();
+
+        // Use in the model
+        tCb1Eff = Cb1_ * tGamma();
+
         const volScalarField& Stilda = tS();
         tgradU.clear();
         const volScalarField::Internal& Cb1Eff = tCb1Eff();
