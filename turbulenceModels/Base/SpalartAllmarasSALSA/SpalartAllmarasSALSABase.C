@@ -649,23 +649,46 @@ void SpalartAllmarasSALSABase<BasicEddyViscosityModel>::correct()
         // Use in the model
         tCb1Eff = Cb1_ * tGamma();
 
-        const volScalarField& Stilda = tS();
-        tgradU.clear();
+        const volScalarField& S = tS();
         const volScalarField::Internal& Cb1Eff = tCb1Eff();
         const tmp<volScalarField::Internal> tCw1Eff = Cb1Eff/sqr(kappa_) + (scalar(1) + Cb2_)/sigmaNut_;
         const volScalarField::Internal& Cw1Eff = tCw1Eff();
 
-        // choose wall damping function based on the settings
-        tmp<volScalarField::Internal> tFw;
-        if (rMod_)
+        // Compute production strain measure:
+        // - sMod_ = true: Shat = Sstar * (1/chi + fv1) (SALSA, compare NASA TMR SA-noft2-salsa
+        //                                                -> same as fw, but with Sstar instead of Omega)
+        // - sMod_ = false: Shat = Stilda (standard SA, computed with fw)
+        tmp<volScalarField> tShat;
+        if (sMod_)
         {
-            // we overwrote Sstar with Stilda if sMod_ so sTilda is here Sstar or Stilda depending on the setting
-            tFw = fwMod(fv1, Stilda, dTilda);
+            const dimensionedScalar eps_chi(chi.dimensions(), SMALL);
+            tShat = S * (1/max(chi, eps_chi) + fv1);
         }
         else
         {
-            tFw = fw(Stilda, dTilda);
+            tShat = S;
         }
+
+        // choose wall damping function based on the settings
+        // rMod internally computes S*(1/chi+fv1).  The base quantity S must be
+        // Sstar (sMod_=true) or Omega (sMod_=false) — not the already-corrected Stilda.
+        tmp<volScalarField::Internal> tFw;
+        if (rMod_)
+        {
+            if (sMod_)
+            {
+                tFw = fwMod(fv1, S, dTilda);
+            }
+            else
+            {
+                tFw = fwMod(fv1, this->Omega(tgradU()), dTilda);
+            }
+        }
+        else
+        {
+            tFw = fw(S, dTilda);
+        }
+        tgradU.clear();
         const volScalarField::Internal& fw = tFw();
 
         tmp<fvScalarMatrix> nuTildaEqn
@@ -675,7 +698,7 @@ void SpalartAllmarasSALSABase<BasicEddyViscosityModel>::correct()
           - fvm::laplacian(alpha*rho*DnuTildaEff(), nuTilda_)
           - Cb2_/sigmaNut_*alpha()*rho()*magSqr(fvc::grad(nuTilda_)()())
          ==
-            Cb1Eff*alpha()*rho()*Stilda()*nuTilda_()*(scalar(1) - ft2())
+            Cb1Eff*alpha()*rho()*tShat()()*nuTilda_()*(scalar(1) - ft2())
           - fvm::Sp
             (
                 (Cw1Eff*fw - Cb1Eff/sqr(kappa_)*ft2())
