@@ -190,7 +190,8 @@ S^\star
 \right|.
 $$
 
-With the default `useSmod true`, the source-code variable named `Stilda` is
+With the default `useSmod true`, this strain magnitude is the base field used
+for $\Gamma_{\mathrm{eff}}$,
 
 $$
 \tilde{S}_{\mathrm{SALSA}} = S^\star.
@@ -254,13 +255,30 @@ C_{w1,\mathrm{eff}}
 + \frac{1 + C_{b2}}{\sigma_{\nu_t}}.
 $$
 
+The production strain measure $\hat{S}$ is
+
+$$
+\hat{S}
+=
+\begin{cases}
+S^\star\left(\dfrac{1}{\max(\chi,\epsilon)} + f_{v1}\right),
+& \text{if `useSmod true`},\\[2ex]
+\tilde{S},
+& \text{if `useSmod false`}.
+\end{cases}
+$$
+
+With `useSmod true` this follows the NASA TMR SA-noft2-salsa formulation,
+where the same Edwards-type combination
+$S^\star\left(1/\chi + f_{v1}\right)$ appears in the production term and in
+the argument of $f_w$.
+
 The SALSA production term is
 
 $$
 P_{\tilde{\nu}}^{\mathrm{SALSA}}
 =
-C_{b1,\mathrm{eff}}
-\rho\tilde{S}_{\mathrm{SALSA}}\tilde{\nu}(1 - f_{t2}),
+C_{b1,\mathrm{eff}}\rho\hat{S}\tilde{\nu}(1 - f_{t2}),
 $$
 
 and the destruction term is
@@ -283,9 +301,28 @@ $$
 
 All other shared coefficients use the common defaults unless overridden.
 
+### Relation to the NASA TMR `SA-noft2-salsa`
+
+With `useSmod true`, `useRmod true`, and `ft2` disabled (the original SALSA
+settings), the implementation follows the NASA TMR `SA-noft2-salsa`
+formulation: the production strain measure
+$\hat{S} = S^\star\left(1/\chi + f_{v1}\right)$, the modified wall-damping
+ratio $r_{\mathrm{mod}}$ of the `useRmod` section with
+$\Psi = \sqrt{\rho_0/\rho}\,\tilde{\nu}/(\kappa\tilde{d})^2$, and the local
+production coefficient $C_{b1,\mathrm{eff}} = C_{b1}\sqrt{\Gamma}$ with
+$\Gamma = \min[1.25,\max(\gamma,0.75)]$.
+
+The following code-level differences to the TMR formulation remain:
+
+- The density ratio in $\Psi$ uses the user parameter `rhoInf`
+  ($\rho_\infty$), while the TMR formulation specifies the freestream
+  stagnation density $\rho_0$; the two coincide for low-speed flows.
+
 ### `useRmod`
 
-If `useRmod false`, SALSA uses the standard $r$ and $f_w$ definitions above.
+If `useRmod false`, SALSA uses the standard $r$ and $f_w$ definitions above,
+evaluated with $S^\star$ when `useSmod true` and with $\tilde{S}$ when
+`useSmod false`.
 
 If `useRmod true`, the wall-damping ratio is replaced before computing $f_w$.
 The code first forms
@@ -296,9 +333,11 @@ $$
 S_r\left(\frac{1}{\max(\chi,\epsilon)} + f_{v1}\right),
 $$
 
-where $S_r$ is the same field currently passed to the wall-damping function.
-With `useSmod true`, this is $S^\star$; with `useSmod false`, this is
-$\tilde{S}$.
+where $S_r$ is the base strain measure passed to the wall-damping function:
+$S^\star$ with `useSmod true` and $\Omega$ with `useSmod false`. The
+already-corrected $\tilde{S}$ is deliberately not used as the base here,
+because $f_{v2}\tilde{\nu}/(\kappa\tilde{d})^2$ would then be combined with
+the $\left(1/\max(\chi,\epsilon) + f_{v1}\right)$ factor a second time.
 
 Then
 
@@ -711,9 +750,10 @@ $$
 The local `SpalartAllmarasSALSADDES` model does not expose the upstream
 `useSigma` switch. In OpenFOAM's standard `SpalartAllmarasDDES`, `useSigma`
 changes the production strain measure to $\tilde{S}_\sigma$. In SALSA,
-`useSmod` already changes the source-code `Stilda` field from the vorticity
-form to the strain-rate field $S^\star$, and this field is also used in the
-SALSA $\Gamma_{\mathrm{eff}}$ and optional `useRmod` path.
+`useSmod` already changes the source-code strain field from the vorticity
+form to the strain-rate field $S^\star$, and this field also feeds the SALSA
+$\Gamma_{\mathrm{eff}}$, the production term, and, with `useSmod true`, the
+optional `useRmod` path.
 
 For that reason, the first local DDES implementation is conservative:
 
