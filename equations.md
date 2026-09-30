@@ -49,6 +49,17 @@ $$
 D_{\tilde{\nu}} = \frac{\tilde{\nu} + \nu}{\sigma_{\nu_t}}.
 $$
 
+This is the standard SA definition and is used by all models in this
+repository, including the SALSA variants. The original SALSA formulation
+instead writes the diffusion coefficient as
+
+$$
+D_{\tilde{\nu}} = \nu + \frac{\tilde{\nu}}{\sigma_{\nu_t}},
+$$
+
+i.e. only $\tilde{\nu}$ is divided by $\sigma_{\nu_t}$. The local
+implementation deliberately retains the standard SA form.
+
 OpenFOAM uses
 
 $$

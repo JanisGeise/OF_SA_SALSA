@@ -78,6 +78,12 @@ The parameter `useRmod` activates Edwards' modification, and `useSmod` sets `Sti
 instead of the vorticity. Setting both parameters to `true` results in the original SALSA turbulence model,
 linked in the references below.
 
+**Note on the diffusion coefficient:** the $\tilde{\nu}$ transport equation uses the standard SA diffusivity
+$(\tilde{\nu} + \nu)/\sigma_{\nu_t}$, consistent with OpenFOAM's standard SA model. The original SALSA
+formulation writes the diffusion coefficient as $\nu + \tilde{\nu}/\sigma_{\nu_t}$ instead; this
+implementation deliberately retains the standard SA form. The influence was tested, the SALSA formulation leads to a smaller 
+buffet amplitude and higher mean $c_L$ along with a slightly higher buffet frequency. 
+
 To use the standard Spalart-Allmaras QCR2020 model, select
 `SpalartAllmarasQCR2020`. This model is independent of SALSA and uses the
 standard OpenFOAM SA transport equation with the QCR2020 nonlinear constitutive

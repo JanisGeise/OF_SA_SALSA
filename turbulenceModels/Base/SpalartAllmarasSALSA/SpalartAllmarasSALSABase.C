@@ -421,7 +421,7 @@ SpalartAllmarasSALSABase<BasicEddyViscosityModel>::SpalartAllmarasSALSABase
         (
             "useRmod",
             this->coeffDict_,
-            false
+            true
         )
     ),
 
