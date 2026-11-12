@@ -234,10 +234,18 @@ QCR2020 is implemented here for standard SA RANS, SA-comp RANS, and standard
 SA-DDES, but not as a SALSA option. SA-comp and QCR2020 are compatible: the
 former modifies the transported-variable equation and the latter modifies the
 constitutive stress relation. QCR2020 should not be combined with another QCR
-variant. If a
-future base model includes a true modeled turbulent kinetic energy term in the
-Boussinesq relation, the QCR2020 isotropic approximation should be omitted to
-avoid double counting.
+variant.
+
+The isotropic `Ccr2''` term stands in for the $-\frac{2}{3}\rho k\,\delta_{ij}$
+part of the Boussinesq relation, which the SA-based base models cannot provide.
+OpenFOAM passes only the traceless deviatoric stress to the momentum equation
+for all of its eddy-viscosity models: the isotropic $\frac{2}{3}\rho k$ part is
+dropped (absorbed by the pressure in incompressible solvers, neglected in
+compressible ones). The implemented `Ccr2''` term is therefore the only
+isotropic contribution and is always active. Following the NASA/TMR note, it
+would only need to be omitted if the wrapper were combined with a formulation
+that retains a modeled $-\frac{2}{3}\rho k\,\delta_{ij}$ term in its momentum
+equation, which no OpenFOAM model does.
 
 The source-code consistent equations for the standard SA, SALSA, and DDES variants are collected in
 [equations.md](equations.md).

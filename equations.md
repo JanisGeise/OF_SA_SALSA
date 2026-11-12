@@ -847,6 +847,16 @@ $$
 - C_{cr2}''\mu_t\sqrt{2W_{mn}W_{mn}}\delta_{ij}.
 $$
 
+Here $\tau_{ij}$ is the linear Boussinesq stress of the selected base model.
+In OpenFOAM, the momentum equation of every eddy-viscosity model receives only
+the traceless part of the modeled stress,
+$-\rho\nu_t\,\mathrm{devTwoSymm}(\nabla\mathbf{U})$, and neglects the isotropic
+$-\frac{2}{3}\rho k\,\delta_{ij}$ contribution. Because $O_{ij}$ is
+antisymmetric, an isotropic part of $\tau_{jk}$ cancels from the $C_{cr1}''$
+term, so the code evaluates that term with the traceless OpenFOAM stress
+directly. The $C_{cr2}''$ term supplies the isotropic contribution and is the
+only isotropic part of the implemented stress.
+
 The coefficients are
 
 $$
@@ -966,6 +976,15 @@ shielding controls because those do not replace the QCR2020 constitutive-stress
 relation. The SA-comp variant likewise combines cleanly with QCR2020 because its
 additional sink acts only in the SA transport equation. QCR2020 is not
 compatible with another QCR variant in the same model.
-If a future base model includes a true modeled $k$ contribution in the
-Boussinesq relation, the final isotropic QCR2020 approximation should be omitted
-to avoid double counting.
+
+The TMR note that the isotropic $C_{cr2}''$ term must be omitted for base
+models that provide $k$ does not apply within OpenFOAM: no OpenFOAM
+eddy-viscosity model retains the isotropic $-\frac{2}{3}\rho k\,\delta_{ij}$
+part in its momentum equation, so there is nothing to double-count against.
+The term would only need to be omitted if this wrapper were combined with a
+formulation that keeps that contribution.
+
+For field output, `R()` returns the traceless linear stress plus the nonlinear
+QCR2020 part, consistent with the stress used in the momentum equation. It
+therefore omits the isotropic $(2/3)k\mathbf{I}$ estimate that the base-class
+`eddyViscosity::R()` of OpenFOAM v2606 adds for post-processing.
